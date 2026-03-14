@@ -1,4 +1,45 @@
-const MY_USER = "Marco Carbajal";
+const MY_USER = "marcocarbajalb";
+
+const detectURL = (text) => {
+    const match = text.match(/https?:\/\/[^\s]+/);
+    return match ? match[0] : null;
+};
+
+const addPreview = async (url, bubble) => {
+    try {
+        const response = await fetch("/api/preview?url=" + encodeURIComponent(url));
+        if (!response.ok) return;
+        const data = await response.json();
+
+        if (!data.title) return;
+
+        const preview = document.createElement("div");
+        preview.classList.add("preview");
+
+        if (data.image) {
+            const img = document.createElement("img");
+            img.src = data.image;
+            img.classList.add("preview-image");
+            preview.appendChild(img);
+        }
+
+        const title = document.createElement("span");
+        title.classList.add("preview-title");
+        title.textContent = data.title;
+        preview.appendChild(title);
+
+        if (data.description) {
+            const desc = document.createElement("span");
+            desc.classList.add("preview-desc");
+            desc.textContent = data.description;
+            preview.appendChild(desc);
+        }
+
+        bubble.appendChild(preview);
+    } catch (err) {
+        console.error("No se pudo cargar la preview:", err);
+    }
+};
 
 const getMessages = async () => {
     try {
@@ -11,6 +52,9 @@ const getMessages = async () => {
         );
 
         const chatBox = document.getElementById("chat-box");
+
+        const isAtBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 50;
+
         chatBox.innerHTML = "";
 
         for (let i = 0; i < validMessages.length; i++) {
@@ -29,13 +73,32 @@ const getMessages = async () => {
             }
 
             const textEl = document.createElement("span");
-            textEl.textContent = message.text;
+            const url = detectURL(message.text);
+            if (url) {
+                const parts = message.text.split(url);
+                textEl.appendChild(document.createTextNode(parts[0]));
+                const link = document.createElement("a");
+                link.href = url;
+                link.textContent = url;
+                link.target = "_blank";
+                link.classList.add("message-link");
+                textEl.appendChild(link);
+                textEl.appendChild(document.createTextNode(parts[1] || ""));
+            } else {
+                textEl.textContent = message.text;
+            }
             bubble.appendChild(textEl);
 
             chatBox.appendChild(bubble);
+
+            if (url) {
+                addPreview(url, bubble);
+            }
         }
 
-        chatBox.scrollTop = chatBox.scrollHeight;
+        if (isAtBottom) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
     } catch (err) {
         console.error("No se pudieron cargar los mensajes:", err);
     }
@@ -86,8 +149,7 @@ userInput.addEventListener("keydown", (e) => {
 
 userInput.addEventListener("input", () => {
     const remaining = 140 - userInput.value.length;
-    document.getElementById("char-count").textContent = remaining;
-
     const counter = document.getElementById("char-count");
+    counter.textContent = remaining;
     counter.style.color = remaining <= 20 ? "#ef4444" : "#8696a0";
 });
