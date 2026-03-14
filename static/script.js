@@ -1,4 +1,4 @@
-const MY_USER = "marcocarbajalb";
+const MY_USER = "Marco Carbajal";
 
 const detectURL = (text) => {
     const match = text.match(/https?:\/\/[^\s]+/);
