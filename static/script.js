@@ -69,6 +69,9 @@ const send = () => {
     if (message.trim() !== "") {
         postMessage({ user: MY_USER, text: message });
         userInput.value = "";
+        const counter = document.getElementById("char-count");
+        counter.textContent = 140;
+        counter.style.color = "#8696a0";
     }
 };
 
@@ -79,4 +82,12 @@ userInput.addEventListener("keydown", (e) => {
         e.preventDefault();
         send();
     }
+});
+
+userInput.addEventListener("input", () => {
+    const remaining = 140 - userInput.value.length;
+    document.getElementById("char-count").textContent = remaining;
+
+    const counter = document.getElementById("char-count");
+    counter.style.color = remaining <= 20 ? "#ef4444" : "#8696a0";
 });

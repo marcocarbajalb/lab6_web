@@ -121,3 +121,9 @@ header p {
 #send-button:hover {
     background: #00c49a;
 }
+
+#char-count {
+    font-size: 12px;
+    color: #8696a0;
+    align-self: center;
+}
