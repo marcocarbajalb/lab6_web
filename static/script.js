@@ -1,30 +1,38 @@
+const MY_USER = "Marco Carbajal";
+
 const getMessages = async () => {
     try {
         const response = await fetch("/api/messages");
         if (!response.ok) throw new Error("Error del servidor");
         const messages = await response.json();
 
-        const chatBox = document.getElementById("chat-box");
-        chatBox.innerHTML = "";
-
         const validMessages = messages.filter(m =>
             (m.author || m.user)?.trim() && m.text?.trim()
         );
 
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = "";
+
         for (let i = 0; i < validMessages.length; i++) {
             const message = validMessages[i];
+            const author = message.author || message.user;
+            const isOwn = author === MY_USER;
 
-            const div = document.createElement("div");
+            const bubble = document.createElement("div");
+            bubble.classList.add("bubble", isOwn ? "own" : "other");
 
-            const strong = document.createElement("strong");
-            strong.textContent = message.author || message.user;
+            if (!isOwn) {
+                const authorEl = document.createElement("span");
+                authorEl.classList.add("author");
+                authorEl.textContent = author;
+                bubble.appendChild(authorEl);
+            }
 
-            const span = document.createElement("span");
-            span.textContent = message.text;
+            const textEl = document.createElement("span");
+            textEl.textContent = message.text;
+            bubble.appendChild(textEl);
 
-            div.appendChild(strong);
-            div.appendChild(span);
-            chatBox.appendChild(div);
+            chatBox.appendChild(bubble);
         }
 
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -56,13 +64,19 @@ setInterval(() => {
 const sendButton = document.getElementById("send-button");
 const userInput = document.getElementById("user-input");
 
-sendButton.addEventListener("click", () => {
+const send = () => {
     const message = userInput.value;
     if (message.trim() !== "") {
-        postMessage({
-            user: "marcocarbajalb",
-            text: message,
-        });
+        postMessage({ user: MY_USER, text: message });
         userInput.value = "";
+    }
+};
+
+sendButton.addEventListener("click", send);
+
+userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        send();
     }
 });
